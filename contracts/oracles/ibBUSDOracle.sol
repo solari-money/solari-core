@@ -49,7 +49,7 @@ contract ibBUSDOracle is IOracle {
         /// @dev calculates exchange rate between ibBUSD and BUSD
         uint256 exchangeRate = vault.totalToken().div(vault.totalSupply());
 
-        return 1e44 / uint256(busdOracle.latestAnswer().mul(exchangeRate)).mul(uint256(bnbUsdOracle.latestAnswer()));
+        return 1e44 / uint256(busdOracle.latestAnswer()).mul(exchangeRate).mul(uint256(bnbUsdOracle.latestAnswer()));
     }
 
     // Get the latest exchange rate
