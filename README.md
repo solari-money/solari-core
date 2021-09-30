@@ -1,1 +1,1 @@
-# ![Solari](./assets/solari_logo.png) Solari
+<img src="Assets/icon.png" width="200">
