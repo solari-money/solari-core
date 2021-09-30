@@ -23,6 +23,14 @@
     chalk "^2.0.0"
     js-tokens "^4.0.0"
 
+"@boringcrypto/boring-solidity@boringcrypto/BoringSolidity#371a01c11465eb1c881193c60a53c0bf15ee8a19":
+  version "1.2.1"
+  resolved "https://codeload.github.com/boringcrypto/BoringSolidity/tar.gz/371a01c11465eb1c881193c60a53c0bf15ee8a19"
+
+"@boringcrypto/boring-solidity@boringcrypto/BoringSolidity#51616f5bbab53adaf6379428de08c9d8093c63f5":
+  version "1.2.2"
+  resolved "https://codeload.github.com/boringcrypto/BoringSolidity/tar.gz/51616f5bbab53adaf6379428de08c9d8093c63f5"
+
 "@ethereumjs/block@^3.4.0", "@ethereumjs/block@^3.5.0", "@ethereumjs/block@^3.5.1":
   version "3.5.1"
   resolved "https://registry.yarnpkg.com/@ethereumjs/block/-/block-3.5.1.tgz#59737d393503249aa750c37dfc83896234f4e175"
@@ -590,6 +598,17 @@
   integrity sha512-RwHnpRnfrnD2MSPveYoPh8nhofEvX7fgjHk1Oq+NNvCcLx4r1js91CO9o+F/F3fBzOCyvm8kKRTriFICX/odWw==
   dependencies:
     antlr4ts "^0.5.0-alpha.4"
+
+"@sushiswap/bentobox-sdk@sushiswap/bentobox-sdk#e3f809870b86afbd57e0930662221d2362a160db":
+  version "1.0.2"
+  resolved "https://codeload.github.com/sushiswap/bentobox-sdk/tar.gz/e3f809870b86afbd57e0930662221d2362a160db"
+  dependencies:
+    "@boringcrypto/boring-solidity" boringcrypto/BoringSolidity#371a01c11465eb1c881193c60a53c0bf15ee8a19
+
+"@sushiswap/core@^1.4.2":
+  version "1.4.2"
+  resolved "https://registry.yarnpkg.com/@sushiswap/core/-/core-1.4.2.tgz#065a6613f842ab7ac6d12878072b59327bffa296"
+  integrity sha512-Khd2i6Bob9uk7dCgVkhUioEoxRP28m6aj25MegAHvnJyxZPVzZDhxSkeL6wdv5MeAp2DwHkYqUq03KDfVTTP4Q==
 
 "@szmarczak/http-timer@^1.1.2":
   version "1.1.2"
