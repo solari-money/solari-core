@@ -48,6 +48,7 @@ contract sSpice is IERC20, Domain {
 
     uint256 private constant LOCK_TIME = 24 hours;
 
+    /// @notice SPICE token
     IERC20 public immutable token;
 
     /// @notice constructs this contract
@@ -190,6 +191,7 @@ contract sSpice is IERC20, Domain {
         users[msg.sender] = user;
         totalSupply += shares;
 
+        /// @notice transfer spice to this contract
         token.safeTransferFrom(msg.sender, address(this), amount);
 
         emit Transfer(address(0), msg.sender, shares);
