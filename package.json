@@ -1,0 +1,10 @@
+{
+  "name": "solari-core",
+  "version": "1.0.0",
+  "description": "Solari Smart Contracts",
+  "main": "index.js",
+  "repository": "https://github.com/solari-money/solari-core.git",
+  "author": "0xTerrence",
+  "license": "MIT",
+  "private": false
+}
