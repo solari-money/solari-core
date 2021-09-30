@@ -80,7 +80,7 @@ contract Solari is ERC20, Ownable {
     /// @param clone receiver
     /// @param amount the amount to mint
     /// @param bentoBox BentoBox contract
-    function minttoBentoBox(address clone, uint256 amount, IBentoBoxV1 bentoBox) public onlyOwner {
+    function mintToBentoBox(address clone, uint256 amount, IBentoBoxV1 bentoBox) public onlyOwner {
         mint(address(bentoBox), amount);
         bentoBox.deposit(address(this), address(bentoBox), clone, amount, 0);
     }
