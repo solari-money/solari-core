@@ -11,7 +11,7 @@
 //  |     \/__/     \/__/     \/__/     \/__/     \|__|     \/__/    |
 //  |                                                                |
 //  ##################################################################
-//  ######################## ibBUSDOracle.sol ########################
+//  ######################### ibBNBOracle.sol ########################
 //  ##################################################################
 //
 // Author(s): 0xTerrence
@@ -36,20 +36,19 @@ interface IAlpacaVault {
 }
 
 // solhint-disable contract-name-camelcase, const-name-snakecase
-contract ibBUSDOracle is IOracle {
+contract ibBNBOracle is IOracle {
     using SafeMath for uint256;
 
-    IAlpacaVault public constant vault = IAlpacaVault(0x7C9e73d4C71dae564d41F78d56439bB4ba87592f);
+    IAlpacaVault public constant vault = IAlpacaVault(0xd7D069493685A581d27824Fc46EdA46B7EfC0063);
 
-    IAggregator public constant busdOracle = IAggregator(0x87Ea38c9F24264Ec1Fff41B04ec94a97Caf99941);
     IAggregator public constant bnbUsdOracle = IAggregator(0x0567F2323251f0Aab15c8dFb1967E4e8A7D42aeE);
 
     // Calculates the latest exchange rate
     _get() internal view returns (uint256) {
-        /// @dev calculates exchange rate between ibBUSD and BUSD
+        /// @dev calculates exchange rate between ibBNB and BNB
         uint256 exchangeRate = vault.totalToken().div(vault.totalSupply());
 
-        return 1e44 / uint256(busdOracle.latestAnswer()).mul(exchangeRate).mul(uint256(bnbUsdOracle.latestAnswer()));
+        return 1e44 / uint256(bnbUsdOracle.latestAnswer()).mul(exchangeRate);
     }
 
     // Get the latest exchange rate
@@ -68,10 +67,10 @@ contract ibBUSDOracle is IOracle {
     }
 
     function name(bytes calldata) public view override returns (string memory) {
-        return "ibBUSD Chainlink";
+        return "ibBNB Chainlink";
     }
 
     function symbol(bytes calldata) public view override returns (string memory) {
-        return "LINK/ibBUSD";
+        return "LINK/ibBNB";
     }
 }
