@@ -11,7 +11,7 @@
 //  |     \/__/     \/__/     \/__/     \/__/     \|__|     \/__/    |
 //  |                                                                |
 //  ##################################################################
-//  ######################## ibBNBSwapper.sol ########################
+//  ####################### sSolariSwapper.sol #######################
 //  ##################################################################
 //
 // Author(s): 0xTerrence
@@ -23,38 +23,43 @@ import "@sushiswap/core/contracts/uniswapv2/interfaces/IUniswapV2Pair.sol";
 import "@sushiswap/bentobox-sdk/contracts/IBentoBoxV1.sol";
 import "../../lib/SafeMath.sol";
 import "../../lib/SafeERC20.sol";
-import "../../lib/UniswapV2Library.sol";
 import "../../interfaces/ISwapper.sol";
 
-interface AlpacaVault {
-    function withdraw(uint256 share) external;
-    function balanceOf(address account) external view;
+interface IsSolari {
+    function burn(address to, uint256 shares) external returns (bool);
+}
+
+interface ISolari {
+    function balanceOf(address account) external view returns (uint256);
+    function approve(address spender, uint256 amount) external;
 }
 
 interface IWBNB {
-    function deposit() external payable;
-    function approve(address guy, uint256 wad) external;
     function balanceOf(address account) external view returns (uint256);
+    function approve(address spender, uint256 amount) external;
 }
 
-// solhint-disable-next-line contract-name-camelcase
-contract ibBNBSwapper is ISwapper {
+contract SSolariSwapper is ISwapper {
     using SafeMath for uint256;
     using SafeERC20 for IERC20;
 
     // Local variables
     IBentoBoxV1 public immutable bentoBox;
 
-    // TODO Replace all zero addresses with production values
+    // solhint-disable-next-line const-name-snakecase
+    IsSolari public constant sSOLARI = IsSolari(address(0));
+    ISolari public constant SOLARI = ISolari(address(0));
     IWBNB public constant WBNB = IWBNB(address(0));
-    IUniswapV2Pair public constant WBNB_SLUSD_PAIR = IUniswapV2Pair(address(0));
-    AlpacaVault public constant BNB_VAULT = AlpacaVault(address(0));
+    IUniswapV2Pair public constant WBNB_SOLARI_PAIR = IUniswapV2Pair(address(0));
+    // solhint-disable-next-line const-name-snakecase
+    IUniswapV2Pair public constant WBNB_slUSD_PAIR = IUniswapV2Pair(address(0));
 
     constructor(
-        IBentoBoxV1 bentoBox_
+        IBentoBoxV1 bentoBox_,
     ) public {
         bentoBox = bentoBox_;
-        WBNB.approve(address(WBNB_SLUSD_PAIR), type(uint256).max);
+        WBNB.approve(address(WBNB_slUSD_PAIR), type(uint256).max);
+        SOLARI.approve(address(WBNB_SOLARI_PAIR), type(uint256).max);
     }
 
     // Given an input amount of an asset and pair reserves, returns the maximum output amount of the other asset
@@ -88,34 +93,27 @@ contract ibBNBSwapper is ISwapper {
         uint256 shareFrom
     ) public override returns (uint256 extraShare, uint256 shareReturned) {
 
-        (uint256 amountFrom, ) = bentoBox.withdraw(fromToken, address(this), address(this), 0, shareFrom);
+        (uint256 amountSSolariFrom, ) = bentoBox.withdraw(fromToken, address(this), address(this), 0, shareFrom);
 
-        BNB_VAULT.withdraw(amountFrom);
-        WBNB.deposit{ value: this.balance }();
+        sSOLARI.burn(address(this), amountSSolariFrom);
 
-        uint256 balance = WBNB.balanceOf(address(this));
+        uint256 amountFrom = SOLAR.balanceOf(address(this));
 
-        (uint256 reserve0, uint256 reserve1) = WBNB_SLUSD_PAIR.getReserves();
+        (uint reserve0, uint reserve1, ) = WBNB_SOLARI_PAIR.getReserves();
 
-        uint256 amountIntermediate = getAmountOut(balance, reserve0, reserve1);
-        WBNB_SLUSD_PAIR.swap(0, amountIntermediate, address(this), new bytes(0));
+        uint256 amountIntermediate = getAmountOut(amountFrom, reserve0, reserve1);
+        WBNB_SOLARI_PAIR.swap(0, amountIntermediate, address(this), new bytes(0));
+
+        amountFrom = WBNB.balanceOf(address(this));
+
+        (reserve0, reserve1, ) = WBNB_slUSD_PAIR.getReserves();
+
+        amountIntermediate = getAmountOut(amountFrom, reserve0, reserve1);
+        WBNB_slUSD_PAIR.swap(0, amountIntermediate, address(this), new bytes(0));
 
         uint256 amountTo = toToken.balanceOf(address(this));
 
         (, shareReturned) = bentoBox.deposit(toToken, address(bentoBox), recipient, amountTo, 0);
-        extraShare = shareReturned.sub(shareToMin);
-    }
-
-    // solhint-disable no-unused-vars
-    // Swaps to an exact amount, from a flexible input amount
-    function swapExact(
-        IERC20 fromToken,
-        IERC20 toToken,
-        address recipient,
-        address refundTo,
-        uint256 shareFromSupplied,
-        uint256 shareToExact
-    ) public override returns (uint256 shareUsed, uint256 shareReturned) {
-        return (0,0);
+        extrashare = shareReturned.sub(shareToMin);
     }
 }

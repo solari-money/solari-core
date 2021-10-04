@@ -11,7 +11,7 @@
 //  |     \/__/     \/__/     \/__/     \/__/     \|__|     \/__/    |
 //  |                                                                |
 //  ##################################################################
-//  ######################## ibBNBSwapper.sol ########################
+//  ######################## ibBUSDSwapper.sol #######################
 //  ##################################################################
 //
 // Author(s): 0xTerrence
@@ -23,12 +23,16 @@ import "@sushiswap/core/contracts/uniswapv2/interfaces/IUniswapV2Pair.sol";
 import "@sushiswap/bentobox-sdk/contracts/IBentoBoxV1.sol";
 import "../../lib/SafeMath.sol";
 import "../../lib/SafeERC20.sol";
-import "../../lib/UniswapV2Library.sol";
 import "../../interfaces/ISwapper.sol";
 
 interface AlpacaVault {
     function withdraw(uint256 share) external;
     function balanceOf(address account) external view;
+}
+
+interface IBUSD {
+    function balanceOf(address account) external view returns (uint256);
+    function approve(address spender, uint256 amount) external;
 }
 
 interface IWBNB {
@@ -38,7 +42,7 @@ interface IWBNB {
 }
 
 // solhint-disable-next-line contract-name-camelcase
-contract ibBNBSwapper is ISwapper {
+contract ibBUSDSwapper is ISwapper {
     using SafeMath for uint256;
     using SafeERC20 for IERC20;
 
@@ -46,15 +50,18 @@ contract ibBNBSwapper is ISwapper {
     IBentoBoxV1 public immutable bentoBox;
 
     // TODO Replace all zero addresses with production values
+    IBUSD public constant BUSD = IBUSD(address(0));
     IWBNB public constant WBNB = IWBNB(address(0));
+    AlpacaVault public constant BUSD_VAULT = AlpacaVault(address(0));
     IUniswapV2Pair public constant WBNB_SLUSD_PAIR = IUniswapV2Pair(address(0));
-    AlpacaVault public constant BNB_VAULT = AlpacaVault(address(0));
+    IUniswapV2Pair public constant WBNB_BUSD_PAIR = IUniswapV2Pair(address(0));
 
     constructor(
         IBentoBoxV1 bentoBox_
     ) public {
         bentoBox = bentoBox_;
-        WBNB.approve(address(WBNB_SLUSD_PAIR), type(uint256).max);
+        BUSD.approve(address(WBNB_BUSD_PAIR), type(uint256).max);
+        IWBNB.approve(address(WBNB_SLUSD_PAIR), type(uint256).max);
     }
 
     // Given an input amount of an asset and pair reserves, returns the maximum output amount of the other asset
@@ -87,17 +94,23 @@ contract ibBNBSwapper is ISwapper {
         uint256 shareToMin,
         uint256 shareFrom
     ) public override returns (uint256 extraShare, uint256 shareReturned) {
-
+        
         (uint256 amountFrom, ) = bentoBox.withdraw(fromToken, address(this), address(this), 0, shareFrom);
 
-        BNB_VAULT.withdraw(amountFrom);
-        WBNB.deposit{ value: this.balance }();
+        BUSD_VAULT.withdraw(amountFrom);
 
-        uint256 balance = WBNB.balanceOf(address(this));
+        uint256 busdBalance = BUSD.balanceOf(address(this));
 
-        (uint256 reserve0, uint256 reserve1) = WBNB_SLUSD_PAIR.getReserves();
+        (uint256 reserve0, uint256 reserve1) = WBNB_BUSD_PAIR.getReserves();
 
-        uint256 amountIntermediate = getAmountOut(balance, reserve0, reserve1);
+        uint256 amountIntermediate = getAmountOut(busdBalance, reserve0, reserve1);
+        WBNB_BUSD_PAIR.swap(0, amountIntermediate, address(this), new bytes(0));
+
+        uint256 wbnbBalance = WBNB.balanceOf(address(this));
+
+        (uint256 reserve2, uint256 reserve3) = WBNB_SLUSD_PAIR.getReserves();
+
+        amountIntermediate = getAmountOut(wbnbBalance, reserve2, reserve3);
         WBNB_SLUSD_PAIR.swap(0, amountIntermediate, address(this), new bytes(0));
 
         uint256 amountTo = toToken.balanceOf(address(this));
