@@ -97,7 +97,7 @@ contract SSolariSwapper is ISwapper {
 
         sSOLARI.burn(address(this), amountSSolariFrom);
 
-        uint256 amountFrom = SOLAR.balanceOf(address(this));
+        uint256 amountFrom = SOLARI.balanceOf(address(this));
 
         (uint reserve0, uint reserve1, ) = WBNB_SOLARI_PAIR.getReserves();
 
