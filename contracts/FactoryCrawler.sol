@@ -29,7 +29,7 @@ import "./interfaces/IOracle.sol";
 import "./interfaces/ISwapper.sol";
 import "./lib/Rebase.sol";
 import "./lib/SafeERC20.sol";
-import "./Solari.sol";
+import "./slUSD.sol";
 
 // solhint-disable avoid-low-level-calls, no-inline-assembly, var-name-mixedcase, not-rely-on-time
 

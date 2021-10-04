@@ -11,7 +11,7 @@
 //  |     \/__/     \/__/     \/__/     \/__/     \|__|     \/__/    |
 //  |                                                                |
 //  ##################################################################
-//  ########################### sSpice.sol ###########################
+//  ########################### sSolari.sol ##########################
 //  ##################################################################
 //
 // Author(s): 0xTerrence
@@ -26,7 +26,7 @@ import "./utils/Domain.sol";
 import "./utils/ERC20.sol";
 import "./utils/Batchable.sol";
 
-/// @title sSpice implementation
+/// @title sSolari implementation
 /// @date Sep 2021
 /// @dev Staking in sSpice inspired by Chef Nomi's SushiBar
 // solhint-disable-next-line contract-name-camelcase
@@ -36,10 +36,10 @@ contract sSpice is IERC20, Domain {
     using SafeERC20 for IERC20;
 
     // solhint-disable-next-line const-name-snakecase
-    string public constant symbol = "sSPICE"; // TODO change once SPICE token symbol is finalized
+    string public constant symbol = "sSOLARI";
     
     // solhint-disable-next-line const-name-snakecase
-    string public constant name = "Staked Spice Token"; // TODO change once SPICE token name is finalized
+    string public constant name = "Staked Solari Token";
 
     // solhint-disable-next-line const-name-snakecase
     uint8 public constant decimals = 18;
@@ -48,7 +48,7 @@ contract sSpice is IERC20, Domain {
 
     uint256 private constant LOCK_TIME = 24 hours;
 
-    /// @notice SPICE token
+    /// @notice SOLARI token
     IERC20 public immutable token;
 
     /// @notice constructs this contract
