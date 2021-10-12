@@ -11,7 +11,7 @@
 //  |     \/__/     \/__/     \/__/     \/__/     \|__|     \/__/    |
 //  |                                                                |
 //  ##################################################################
-//  ####################### FactoryCrawler.sol #######################
+//  ########################### Factory.sol ##########################
 //  ##################################################################
 //
 // Author(s): 0xTerrence
@@ -33,10 +33,10 @@ import "./slUSD.sol";
 
 // solhint-disable avoid-low-level-calls, no-inline-assembly, var-name-mixedcase, not-rely-on-time
 
-/// @title FactoryCrawler, named after the machines that extract spice in the Dune universe
+/// @title Factory
 /// @date Sep 2021
-/// @dev FactoryCrawler implementation
-contract FactoryCrawler is Ownable, IMasterContract {
+/// @dev Factory implementation
+contract Factory is Ownable, IMasterContract {
     using SafeMath for uint256;
     using SafeMath128 for uint128;
     using RebaseLibrary for Rebase;
@@ -101,18 +101,18 @@ contract FactoryCrawler is Ownable, IMasterContract {
     uint256 private constant DISTRIBUTION_PRECISION = 100;
 
     /// @notice The constructor is only used for the initial master contract. Subsequent clones are initialised via `init`.
-    constructor(IBentoBoxV1 bentoBox_, IERC20 magicInternetMoney_) public {
+    constructor(IBentoBoxV1 bentoBox_, IERC20 slUsd_) public {
         bentoBox = bentoBox_;
-        magicInternetMoney = magicInternetMoney_;
+        slUsd = slUsd_;
         masterContract = this;
     }
 
     /// @notice Serves as the constructor for clones, as clones can't have a regular constructor
     /// @dev `data` is abi encoded in the format: (IERC20 collateral, IERC20 asset, IOracle oracle, bytes oracleData)
     function init(bytes calldata data) public payable override {
-        require(address(collateral) == address(0), "Cauldron: already initialized");
+        require(address(collateral) == address(0), "Factory: already initialized");
         (collateral, oracle, oracleData, accrueInfo.INTEREST_PER_SECOND, LIQUIDATION_MULTIPLIER, COLLATERIZATION_RATE, BORROW_OPENING_FEE) = abi.decode(data, (IERC20, IOracle, bytes, uint64, uint256, uint256, uint256));
-        require(address(collateral) != address(0), "Cauldron: bad pair");
+        require(address(collateral) != address(0), "Factory: bad pair");
     }
 
     /// @notice Accrues the interest on the borrowed tokens and handles the accumulation of fees.
@@ -166,7 +166,14 @@ contract FactoryCrawler is Ownable, IMasterContract {
     /// @dev Checks if the user is solvent in the closed liquidation case at the end of the function body.
     modifier solvent() {
         _;
-        require(_isSolvent(msg.sender, exchangeRate), "Cauldron: user insolvent");
+        require(_isSolvent(msg.sender, exchangeRate), "Factory: user insolvent");
+    }
+
+    /// @notice checks if a user's position is solvent
+    /// @param _user the address to check
+    /// @note accurue() must be called before this function in order for it to work
+    function isSolvent(address _user) public view returns (bool) {
+        _isSolvent(_user, exchangeRate);
     }
 
     /// @notice Gets the exchange rate. I.e how much collateral to buy 1e18 asset.
@@ -199,7 +206,7 @@ contract FactoryCrawler is Ownable, IMasterContract {
         bool skim
     ) internal {
         if (skim) {
-            require(share <= bentoBox.balanceOf(token, address(this)).sub(total), "Cauldron: Skim too much");
+            require(share <= bentoBox.balanceOf(token, address(this)).sub(total), "Factory: Skim too much");
         } else {
             bentoBox.transfer(token, msg.sender, address(this), share);
         }
@@ -247,8 +254,8 @@ contract FactoryCrawler is Ownable, IMasterContract {
         userBorrowPart[msg.sender] = userBorrowPart[msg.sender].add(part);
 
         // As long as there are tokens on this contract you can 'mint'... this enables limiting borrows
-        share = bentoBox.toShare(magicInternetMoney, amount, false);
-        bentoBox.transfer(magicInternetMoney, address(this), to, share);
+        share = bentoBox.toShare(slUsd, amount, false);
+        bentoBox.transfer(slUsd, address(this), to, share);
 
         emit LogBorrow(msg.sender, to, amount.add(feeAmount), part);
     }
@@ -270,8 +277,8 @@ contract FactoryCrawler is Ownable, IMasterContract {
         (totalBorrow, amount) = totalBorrow.sub(part, true);
         userBorrowPart[to] = userBorrowPart[to].sub(part);
 
-        uint256 share = bentoBox.toShare(magicInternetMoney, amount, true);
-        bentoBox.transfer(magicInternetMoney, skim ? address(bentoBox) : msg.sender, address(this), share);
+        uint256 share = bentoBox.toShare(slUsd, amount, true);
+        bentoBox.transfer(slUsd, skim ? address(bentoBox) : msg.sender, address(this), share);
         emit LogRepay(skim ? address(bentoBox) : msg.sender, to, amount, part);
     }
 
@@ -367,10 +374,10 @@ contract FactoryCrawler is Ownable, IMasterContract {
             callData = abi.encodePacked(callData, value1, value2);
         }
 
-        require(callee != address(bentoBox) && callee != address(this), "Cauldron: can't call");
+        require(callee != address(bentoBox) && callee != address(this), "Factory: can't call");
 
         (bool success, bytes memory returnData) = callee.call{value: value}(callData);
-        require(success, "Cauldron: call failed");
+        require(success, "Factory: call failed");
         return (returnData, returnValues);
     }
 
@@ -415,7 +422,7 @@ contract FactoryCrawler is Ownable, IMasterContract {
             } else if (action == ACTION_UPDATE_EXCHANGE_RATE) {
                 (bool must_update, uint256 minRate, uint256 maxRate) = abi.decode(datas[i], (bool, uint256, uint256));
                 (bool updated, uint256 rate) = updateExchangeRate();
-                require((!must_update || updated) && rate > minRate && (maxRate == 0 || rate > maxRate), "Cauldron: rate not ok");
+                require((!must_update || updated) && rate > minRate && (maxRate == 0 || rate > maxRate), "Factory: rate not ok");
             } else if (action == ACTION_BENTO_SETAPPROVAL) {
                 (address user, address _masterContract, bool approved, uint8 v, bytes32 r, bytes32 s) =
                     abi.decode(datas[i], (address, address, bool, uint8, bytes32, bytes32));
@@ -440,7 +447,7 @@ contract FactoryCrawler is Ownable, IMasterContract {
                 }
             } else if (action == ACTION_GET_REPAY_SHARE) {
                 int256 part = abi.decode(datas[i], (int256));
-                value1 = bentoBox.toShare(magicInternetMoney, totalBorrow.toElastic(_num(part, value1, value2), true), true);
+                value1 = bentoBox.toShare(slUsd, totalBorrow.toElastic(_num(part, value1, value2), true), true);
             } else if (action == ACTION_GET_REPAY_PART) {
                 int256 amount = abi.decode(datas[i], (int256));
                 value1 = totalBorrow.toBase(_num(amount, value1, value2), false);
@@ -448,7 +455,7 @@ contract FactoryCrawler is Ownable, IMasterContract {
         }
 
         if (status.needsSolvencyCheck) {
-            require(_isSolvent(msg.sender, exchangeRate), "Cauldron: user insolvent");
+            require(_isSolvent(msg.sender, exchangeRate), "Factory: user insolvent");
         }
     }
 
@@ -498,13 +505,13 @@ contract FactoryCrawler is Ownable, IMasterContract {
                 allBorrowPart = allBorrowPart.add(borrowPart);
             }
         }
-        require(allBorrowAmount != 0, "Cauldron: all are solvent");
+        require(allBorrowAmount != 0, "Factory: all are solvent");
         _totalBorrow.elastic = _totalBorrow.elastic.sub(allBorrowAmount.to128());
         _totalBorrow.base = _totalBorrow.base.sub(allBorrowPart.to128());
         totalBorrow = _totalBorrow;
         totalCollateralShare = totalCollateralShare.sub(allCollateralShare);
 
-        // Apply a percentual fee share to sSpice holders
+        // Apply a percentual fee share to sSolari holders
         
         {
             uint256 distributionAmount = (allBorrowAmount.mul(LIQUIDATION_MULTIPLIER) / LIQUIDATION_MULTIPLIER_PRECISION).sub(allBorrowAmount).mul(DISTRIBUTION_PART) / DISTRIBUTION_PRECISION; // Distribution Amount
@@ -512,16 +519,16 @@ contract FactoryCrawler is Ownable, IMasterContract {
             accrueInfo.feesEarned = accrueInfo.feesEarned.add(distributionAmount.to128());
         }
 
-        uint256 allBorrowShare = bentoBox.toShare(magicInternetMoney, allBorrowAmount, true);
+        uint256 allBorrowShare = bentoBox.toShare(slUsd, allBorrowAmount, true);
 
         // Swap using a swapper freely chosen by the caller
         // Open (flash) liquidation: get proceeds first and provide the borrow after
         bentoBox.transfer(collateral, address(this), to, allCollateralShare);
         if (swapper != ISwapper(0)) {
-            swapper.swap(collateral, magicInternetMoney, msg.sender, allBorrowShare, allCollateralShare);
+            swapper.swap(collateral, slUsd, msg.sender, allBorrowShare, allCollateralShare);
         }
 
-        bentoBox.transfer(magicInternetMoney, msg.sender, address(this), allBorrowShare);
+        bentoBox.transfer(slUsd, msg.sender, address(this), allBorrowShare);
     }
 
     /// @notice Withdraws the fees accumulated.
@@ -529,8 +536,8 @@ contract FactoryCrawler is Ownable, IMasterContract {
         accrue();
         address _feeTo = masterContract.feeTo();
         uint256 _feesEarned = accrueInfo.feesEarned;
-        uint256 share = bentoBox.toShare(magicInternetMoney, _feesEarned, false);
-        bentoBox.transfer(magicInternetMoney, address(this), _feeTo, share);
+        uint256 share = bentoBox.toShare(slUsd, _feesEarned, false);
+        bentoBox.transfer(slUsd, address(this), _feeTo, share);
         // solhint-disable-next-line reentrancy
         accrueInfo.feesEarned = 0;
 
@@ -545,11 +552,11 @@ contract FactoryCrawler is Ownable, IMasterContract {
         emit LogFeeTo(newFeeTo);
     }
 
-    /// @notice reduces the supply of MIM
+    /// @notice reduces the supply of slUSD
     /// @param amount amount to reduce supply by
     function reduceSupply(uint256 amount) public {
         require(msg.sender == masterContract.owner(), "Caller is not the owner");
-        bentoBox.withdraw(magicInternetMoney, address(this), address(this), amount, 0);
-        MagicInternetMoney(address(magicInternetMoney)).burn(amount);
+        bentoBox.withdraw(slUsd, address(this), address(this), amount, 0);
+        MagicInternetMoney(address(slUsd)).burn(amount);
     }
 }

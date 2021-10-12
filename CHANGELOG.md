@@ -7,17 +7,17 @@ All notable changes to this project will be documented in this file. See [standa
 
 ### ⚠ BREAKING CHANGES
 
-* add FactoryCrawler(subject to change)
+* add Factory(subject to change)
 
 ### Features
 
-* add FactoryCrawler(subject to change) ([658ef3c](https://github.com/solari-money/solari-core/commit/658ef3ca70aa30fff89835581081e58c5408317b))
+* add Factory(subject to change) ([658ef3c](https://github.com/solari-money/solari-core/commit/658ef3ca70aa30fff89835581081e58c5408317b))
 * add incomplete ibBUSD oracle ([fbbf893](https://github.com/solari-money/solari-core/commit/fbbf8930300cbffefee69df265d4d42be3a220d3))
 * add SafeERC20 and Batchable ([fd0945f](https://github.com/solari-money/solari-core/commit/fd0945fcd65840e126c79e9cc3732d1d44258e18))
 * add solari token implementation ([fc3d9dd](https://github.com/solari-money/solari-core/commit/fc3d9ddf4efeaeb3c7f583f400742806f5e4480c))
 * add solhint support ([29d22af](https://github.com/solari-money/solari-core/commit/29d22afc946e8131c607e151af7637b54735b7c8))
-* add Spice token implementation ([9331377](https://github.com/solari-money/solari-core/commit/9331377823cb3a6ff5258ee5909fe355fa5a0ebc))
-* add sSpice token ([94501de](https://github.com/solari-money/solari-core/commit/94501deacc063fc5acbbfc5e8dcda0845125f624))
+* add Solari token implementation ([9331377](https://github.com/solari-money/solari-core/commit/9331377823cb3a6ff5258ee5909fe355fa5a0ebc))
+* add sSolari token ([94501de](https://github.com/solari-money/solari-core/commit/94501deacc063fc5acbbfc5e8dcda0845125f624))
 
 
 ### Bug Fixes

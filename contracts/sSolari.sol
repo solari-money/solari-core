@@ -28,9 +28,9 @@ import "./utils/Batchable.sol";
 
 /// @title sSolari implementation
 /// @date Sep 2021
-/// @dev Staking in sSpice inspired by Chef Nomi's SushiBar
+/// @dev Staking in sSolari inspired by Chef Nomi's SushiBar
 // solhint-disable-next-line contract-name-camelcase
-contract sSpice is IERC20, Domain {
+contract sSolari is IERC20, Domain {
     using SafeMath for uint256;
     using SafeMath128 for uint128;
     using SafeERC20 for IERC20;
