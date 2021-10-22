@@ -29,6 +29,19 @@ import "./utils/Ownable.sol";
 contract Solari is ERC20, Ownable {
     using SafeMath for uint256;
 
+    // Events
+    event LogAddMinter(address indexed minter_);
+    event LogRemoveMinter(address indexed minter_);
+
+    // Minters
+    mapping(address => bool) public minters;
+
+    // Modifiers
+    modifier onlyMinter() {
+        require(minters[msg.sender] == true, "SOLARI: not a minter");
+        _;
+    }
+
     // ERC20 `variables`
     // solhint-disable-next-line const-name-snakecase
     string public constant symbol = "SOLARI";
@@ -46,7 +59,7 @@ contract Solari is ERC20, Ownable {
     /// @dev mints `amount` tokens to account `to`
     /// @param to the account to mint to
     /// @param amount the amount to mint
-    function mint(address to, uint256 amount) public onlyOwner {
+    function mint(address to, uint256 amount) public onlyMinter {
         // solhint-disable-next-line reason-string
         require(to != address(0), "SOLARI: can not mint to zero address");
         require(MAX_SUPPLY >= totalSupply.add(amount), "SOLARI: Don't go over MAX");
@@ -54,5 +67,18 @@ contract Solari is ERC20, Ownable {
         totalSupply += amount;
         balanceOf[to] += amount;
         emit Transfer(address(0), to, amount);
+    }
+
+    /// @dev minter access control functions
+    function addMinter(address minter_) public onlyOwner {
+        minters[minter_] = true;
+
+        emit LogAddMinter(minter_);
+    }
+
+    function removeMinter(address minter_) public onlyOwner {
+        minters[minter_] = false;
+
+        emit LogRemoveMinter(minter_);
     }
 }
